@@ -93,24 +93,6 @@ legicivica/
 `agents/pipeline.py` → `main.py`: each layer only depends on the one below it,
 so any piece can be tested in isolation before it's wired into an agent.
 
-## How the reference resolver works, briefly
-
-A new law amends article A; article A itself references article B; B
-references C, and so on. The resolver fetches a law, uses a regex-based parser
-to find every code article it references, and walks outward breadth-first —
-everything one hop away is resolved before anything two hops away — up to a
-configurable `max_depth` and `max_articles`. Every article is fetched at most
-once no matter how many other articles point to it, and anything discovered but
-not followed (depth or budget exceeded) is reported, not silently dropped.
-
-```python
-from legicivica.tools.resolver import resolve_law_references
-
-result = resolve_law_references("JORFTEXT000054399113", max_depth=2, max_articles=25)
-# result["root"], result["resolved"], result["errors"],
-# result["skipped_max_depth"], result["skipped_max_articles"], result["corrections"]
-```
-
 ## Following along
 
 This project is being built and written about at the same time — the blog
