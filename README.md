@@ -22,7 +22,7 @@ together, as a [blog series](#following-along), on purpose.
 |---|---|---|
 | **Fetch** | Retrieve a law from the Journal Officiel, or any article from any French code | ✅ Built |
 | **Resolve** | Recursively follow every article a law references, deduplicated and depth/budget-bounded | ✅ Built |
-| **Explain** | Turn the resolved law + references into a plain-language explanation of what changed | 🧭 Designed, not yet built |
+| **Explain** | Turn the resolved law + references into a plain-language, grounded explanation of what changed | ✅ Built |
 | **Classify** | Determine who's affected, compare to the equivalent EU directive, score transparency | 🧭 Designed, not yet built |
 | **Discover & deploy** | Poll for newly published laws, run the pipeline unattended, notify subscribers | 🧭 Designed, not yet built |
 
@@ -67,7 +67,11 @@ python test_client.py
 # everything it references, deduplicated and depth/budget-bounded
 python test_resolver.py
 
-# Run the ADK agent end to end
+# Run the explainer agent: resolve a law, then have Gemini turn it into a
+# grounded, plain-language, structured explanation of what changed
+python test_explainer.py
+
+# Run the conversational agent end to end (fetch a law by natural-language request)
 python main.py
 ```
 
@@ -77,21 +81,26 @@ python main.py
 legicivica/
 ├── legicivica/
 │   ├── agents/
-│   │   └── pipeline.py         # ADK agent definitions (models, tools, instructions)
+│   │   ├── pipeline.py         # ADK agent definitions (law_fetcher, explainer_agent) + prompt building
+│   │   └── schemas.py          # Pydantic output schema the explainer agent is constrained to
 │   └── tools/
 │       ├── legifrance.py       # Légifrance API client — no ADK dependency, testable alone
 │       ├── reference_parser.py # Regex-based extractor for French code-article references
 │       ├── resolver.py         # Recursive, breadth-first reference resolver
 │       └── __init__.py         # Agent-facing tool wrappers (the docstrings the model reads)
-├── main.py                     # Entry point — wires the agent + runner together
+├── main.py                     # Entry point — conversational law_fetcher demo
 ├── test_client.py              # Smoke test for the Légifrance API client
 ├── test_resolver.py            # Smoke test for the reference resolver
+├── test_explainer.py           # Smoke test for the explainer agent
 └── requirements.txt
 ```
 
 `legifrance.py` → `reference_parser.py` / `resolver.py` → `tools/__init__.py` →
-`agents/pipeline.py` → `main.py`: each layer only depends on the one below it,
-so any piece can be tested in isolation before it's wired into an agent.
+`agents/pipeline.py` → `main.py` / `test_*.py`: each layer only depends on the
+one below it, so any piece can be tested in isolation before it's wired into
+an agent. `main.py` and each `test_*.py` script are separate, single-purpose
+entry points rather than one script that runs everything — there's no
+orchestrator chaining the agents together yet, that's a later stage.
 
 ## Following along
 
