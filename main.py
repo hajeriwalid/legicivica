@@ -28,7 +28,12 @@ async def main():
         ))],
     )
 
-    for event in runner.run(user_id=USER_ID, session_id=session.id, new_message=message):
+    # True non-blocking async generator — run_async() awaits at each step,
+    # so this doesn't stall the event loop the way the sync runner.run()
+    # wrapper does (it spins up its own thread + event loop and blocks the
+    # caller on a plain queue.Queue.get() — fine standalone, a problem the
+    # moment this shares a loop with anything else).
+    async for event in runner.run_async(user_id=USER_ID, session_id=session.id, new_message=message):
         if event.is_final_response() and event.content:
             for part in event.content.parts:
                 if part.text:
