@@ -8,10 +8,7 @@ often deferring the substance to ministerial decrees, spanning multiple codes,
 and transposing EU directives without summarizing them. LegiCivica is an
 AI-agent pipeline, built on [Google ADK](https://google.github.io/adk-docs/) and
 the official [Légifrance API](https://piste.gouv.fr/), that tries to close that
-gap: fetch a new law, resolve everything it references, explain what actually
-changed in plain language, and classify who's affected — so a citizen, an NGO,
-or a journalist can understand a law's real impact without a law degree. It could also provide
-a score to the new law according to defined criteria such as transparency, rule of law, etc.
+gap: fetch a new law, resolve everything it references, generate automated text summaries and map textual edits — assisting citizens, NGOs, and journalists in navigating legislative changes through an open academic lens. It could also evaluate alignment against normative political science criteria (e.g., Venice Commission rule of law benchmarks, structural transparency metrics).
 
 This is a public, in-progress build. The code and its failures are documented
 together, as a [blog series](#following-along), on purpose.
@@ -23,7 +20,8 @@ together, as a [blog series](#following-along), on purpose.
 | **Fetch** | Retrieve a law from the Journal Officiel, or any article from any French code | ✅ Built |
 | **Resolve** | Recursively follow every article a law references, deduplicated and depth/budget-bounded | ✅ Built |
 | **Explain** | Turn the resolved law + references into a plain-language, grounded explanation of what changed | ✅ Built |
-| **Classify** | Determine who's affected, compare to the equivalent EU directive, score transparency | 🧭 Designed, not yet built |
+| **Classify & score** | Determine who's affected, score transparency, and assess against 5 scoped civic/rule-of-law criteria | ✅ Built |
+| **Orchestrate** | Wire fetch → resolve → explain → classify/civic (parallel) → assemble into one ADK `Workflow` graph | ✅ Built |
 | **Discover & deploy** | Poll for newly published laws, run the pipeline unattended, notify subscribers | 🧭 Designed, not yet built |
 
 ## Getting started
@@ -71,6 +69,14 @@ python test_resolver.py
 # grounded, plain-language, structured explanation of what changed
 python test_explainer.py
 
+# Run the classifier + civic-health agents: who's affected, transparency
+# score, and a scoped civic/rule-of-law index — chained by hand
+python test_classifier.py
+
+# Run the same thing as an actual ADK Workflow graph — explainer, then
+# classifier and civic-health in parallel, joined, then assembled
+python test_workflow.py
+
 # Run the conversational agent end to end (fetch a law by natural-language request)
 python main.py
 ```
@@ -81,26 +87,63 @@ python main.py
 legicivica/
 ├── legicivica/
 │   ├── agents/
-│   │   ├── pipeline.py         # ADK agent definitions (law_fetcher, explainer_agent) + prompt building
-│   │   └── schemas.py          # Pydantic output schema the explainer agent is constrained to
+│   │   ├── pipeline.py         # ADK agent definitions (law_fetcher, explainer, classifier, civic) + prompt building
+│   │   ├── schemas.py          # Pydantic output schemas each agent is constrained to
+│   │   └── orchestrator.py     # The real ADK Workflow graph — nodes, edges, JoinNode fan-in
 │   └── tools/
 │       ├── legifrance.py       # Légifrance API client — no ADK dependency, testable alone
 │       ├── reference_parser.py # Regex-based extractor for French code-article references
 │       ├── resolver.py         # Recursive, breadth-first reference resolver
+│       ├── scoring.py          # Deterministic transparency score + civic index assembly
 │       └── __init__.py         # Agent-facing tool wrappers (the docstrings the model reads)
 ├── main.py                     # Entry point — conversational law_fetcher demo
 ├── test_client.py              # Smoke test for the Légifrance API client
 ├── test_resolver.py            # Smoke test for the reference resolver
 ├── test_explainer.py           # Smoke test for the explainer agent
+├── test_classifier.py          # Smoke test for classifier + civic-health agents, hand-chained
+├── test_workflow.py            # Runs the same chain as an actual Workflow graph
 └── requirements.txt
 ```
 
 `legifrance.py` → `reference_parser.py` / `resolver.py` → `tools/__init__.py` →
-`agents/pipeline.py` → `main.py` / `test_*.py`: each layer only depends on the
-one below it, so any piece can be tested in isolation before it's wired into
-an agent. `main.py` and each `test_*.py` script are separate, single-purpose
-entry points rather than one script that runs everything — there's no
-orchestrator chaining the agents together yet, that's a later stage.
+`agents/pipeline.py` → `agents/orchestrator.py` → `main.py` / `test_*.py`: each
+layer only depends on the one below it, so any piece can be tested in
+isolation before it's wired into an agent or a graph. `orchestrator.py` wires
+`explainer_agent` → (`classifier_agent`, `civic_agent` in parallel) →
+`assemble_reports` into one `Workflow` object — replacing the hand-chained
+`async def main()` style still used by `test_classifier.py` for comparison.
+`main.py`'s `law_fetcher` runs standalone, outside the workflow, for
+natural-language requests.
+
+## How the pieces fit into a workflow
+
+`explainer_agent`, `classifier_agent`, and `civic_agent` are wired into one
+ADK `Workflow` graph rather than called by hand in sequence. Nodes can be
+plain functions or `LlmAgent`s; a plain tuple in the chain is a sequential
+step, a nested tuple is a parallel fan-out, and a `JoinNode` is required
+wherever a later node needs to wait for every branch of a fan-out to finish
+— a plain node otherwise fires as soon as the first branch completes:
+
+```python
+impact_pipeline = Workflow(
+    name="impact_pipeline",
+    edges=[
+        (
+            "START",
+            resolve_and_build_prompt,
+            explainer_agent,
+            build_classifier_prompt_node,
+            (classifier_agent, civic_agent),   # parallel — neither depends on the other
+            reports_ready,                     # JoinNode — waits for both branches
+            assemble_reports,
+        )
+    ],
+)
+```
+
+Data crosses more than one hop via `ctx.state` / `output_key`, not just the
+previous node's return value — see `orchestrator.py` for the full graph and
+`test_workflow.py` to run it.
 
 ## Following along
 
@@ -120,6 +163,22 @@ via the official [PISTE API](https://piste.gouv.fr/), under the
 This project's code is licensed under
 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode) — see
 [LICENSE](LICENSE). Share it, adapt it, credit it; not for commercial use.
+
+
+## ⚠️ Disclaimer & Legal Notice / Avertissement Légal
+
+### English
+**This repository is an open-source research experiment in civic tech**
+* **Not Legal Advice:** LegiCivica generates automated, AI-assisted text summaries and normative policy scores. It does **not** provide legal advice, legal consultations, or legal characterization under any domestic jurisdiction. 
+* **No Judicial Weight:** Output scores measure alignment with open international civic frameworks; they do not assess formal legal validity, enforceability, or constitutionality.
+* **AI & API Limitations:** Summaries and reference mappings are generated by Large Language Models and automated API parsing; they may contain errors or hallucinated content. Users must independently verify all information against official publications in the *Journal Officiel*.
+* **EU AI Act Notice (Regulation EU 2024/1689):** This software is an automated processing system designed for educational and civic research purposes only.
+
+### Français
+**Ce dépôt est une expérimentation open-source de recherche en civic tech**
+* **Absence de conseil juridique :** LegiCivica produit des synthèses textuelles automatisées et des évaluations normatives. Il ne fournit **aucun conseil juridique** ni aucune consultation legale. 
+* **Absence de valeur juridique :** Les données et scores produits ne jugent ni de la constitutionnalité, ni de la validité juridique, ni de l'opposabilité des textes (compétence exclusive des juridictions.
+* **Limites de l'IA :** Les résumés et résolutions de références sont issus de traitements automatisés et de modèles d'IA. Ils peuvent comporter des inexactitudes et erreur. Seuls les textes publiés au *Journal Officiel* font foi.
 
 ---
 
