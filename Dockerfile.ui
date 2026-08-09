@@ -1,0 +1,28 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY legicivica/ legicivica/
+COPY app/ app/
+
+# Same fix as Dockerfile.poller, and needed here too — this was originally
+# assumed unnecessary (Streamlit has its own sys.path bootstrap that
+# handles the plain `streamlit run script.py` case), but that assumption
+# was never actually verified against a real client session: a bare
+# `curl`/HTTP GET only fetches Streamlit's static shell and never triggers
+# script execution, so a ModuleNotFoundError on `import legicivica` was
+# reaching real users in the browser (Streamlit renders it as an in-app
+# traceback, which doesn't necessarily show up in stdout/Cloud Logging)
+# while every curl-based check kept coming back clean. Confirmed live in
+# production before this fix was added.
+ENV PYTHONPATH=/app
+
+# Cloud Run injects $PORT (defaults to 8080) — bind to it and to 0.0.0.0
+# so the container is reachable from outside itself.
+CMD streamlit run app/streamlit_app.py \
+    --server.port=${PORT:-8080} \
+    --server.address=0.0.0.0 \
+    --server.headless=true

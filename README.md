@@ -22,7 +22,9 @@ together, as a [blog series](#following-along), on purpose.
 | **Explain** | Turn the resolved law + references into a plain-language, grounded explanation of what changed | ✅ Built |
 | **Classify & score** | Determine who's affected, score transparency, and assess against 5 scoped civic/rule-of-law criteria | ✅ Built |
 | **Orchestrate** | Wire fetch → resolve → explain → classify/civic (parallel) → assemble into one ADK `Workflow` graph | ✅ Built |
-| **Discover & deploy** | Poll for newly published laws, run the pipeline unattended, notify subscribers | 🧭 Designed, not yet built |
+| **Discover** | Search JORF by date range + document nature, dedupe against already-processed laws, run the pipeline unattended | ✅ Built |
+| **Dashboard** | Public read-only UI — table + chart of transparency/civic scores over time | ✅ Built |
+| **Deploy** | Containerize + run on GCP (Cloud Run, Cloud Scheduler, Firestore) | 📝 Runbook written, not yet executed against real infra |
 
 ## Getting started
 
@@ -34,6 +36,10 @@ together, as a [blog series](#following-along), on purpose.
   [PISTE help center](https://piste.gouv.fr/help-center/guide) if the
   subscription checkbox is greyed out, you likely need to accept the CGU first)
 - A Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+- Optional, only for the discovery poller / dashboard: a GCP project with
+  Firestore enabled, and `gcloud auth application-default login` run once
+  locally. The core agent pipeline (`main.py`, every `test_*.py`) needs none
+  of this.
 
 ### Setup
 
@@ -79,6 +85,18 @@ python test_workflow.py
 
 # Run the conversational agent end to end (fetch a law by natural-language request)
 python main.py
+
+# Search JORF for actual laws (not décrets/arrêtés) published in a date window
+python test_jorf_search.py
+
+# The discovery poller — requires GCP_PROJECT_ID and Firestore access.
+# --mode backfill seeds historical data; --mode daily is what runs on a
+# schedule once deployed. Both need production PISTE credentials
+# (PISTE_SANDBOX=false) to find real, current laws.
+python scripts/run_pipeline.py --mode backfill --weeks 8 --cap 20
+
+# The dashboard — reads whatever run_pipeline.py has written to Firestore
+streamlit run app/streamlit_app.py
 ```
 
 ## Project structure
@@ -90,18 +108,28 @@ legicivica/
 │   │   ├── pipeline.py         # ADK agent definitions (law_fetcher, explainer, classifier, civic) + prompt building
 │   │   ├── schemas.py          # Pydantic output schemas each agent is constrained to
 │   │   └── orchestrator.py     # The real ADK Workflow graph — nodes, edges, JoinNode fan-in
-│   └── tools/
-│       ├── legifrance.py       # Légifrance API client — no ADK dependency, testable alone
-│       ├── reference_parser.py # Regex-based extractor for French code-article references
-│       ├── resolver.py         # Recursive, breadth-first reference resolver
-│       ├── scoring.py          # Deterministic transparency score + civic index assembly
-│       └── __init__.py         # Agent-facing tool wrappers (the docstrings the model reads)
+│   ├── tools/
+│   │   ├── legifrance.py       # Légifrance API client — no ADK dependency, testable alone
+│   │   ├── reference_parser.py # Regex-based extractor for French code-article references
+│   │   ├── resolver.py         # Recursive, breadth-first reference resolver
+│   │   ├── scoring.py          # Deterministic transparency score + civic index assembly
+│   │   └── __init__.py         # Agent-facing tool wrappers (the docstrings the model reads)
+│   └── storage/
+│       └── firestore_store.py  # Firestore data access — law dedup/save/list, poller watermark
+├── scripts/
+│   └── run_pipeline.py         # Discovery poller / historical backfill entrypoint
+├── app/
+│   └── streamlit_app.py        # Public read-only dashboard — table + score-evolution chart
 ├── main.py                     # Entry point — conversational law_fetcher demo
 ├── test_client.py              # Smoke test for the Légifrance API client
 ├── test_resolver.py            # Smoke test for the reference resolver
 ├── test_explainer.py           # Smoke test for the explainer agent
 ├── test_classifier.py          # Smoke test for classifier + civic-health agents, hand-chained
 ├── test_workflow.py            # Runs the same chain as an actual Workflow graph
+├── test_jorf_search.py         # Smoke test for JORF date-range/nature search
+├── Dockerfile.poller            # Container for scripts/run_pipeline.py (Cloud Run Jobs)
+├── Dockerfile.ui                 # Container for app/streamlit_app.py (Cloud Run Service)
+├── DEPLOY.md                    # GCP deployment runbook (Cloud Shell, step by step)
 └── requirements.txt
 ```
 
@@ -144,6 +172,32 @@ impact_pipeline = Workflow(
 Data crosses more than one hop via `ctx.state` / `output_key`, not just the
 previous node's return value — see `orchestrator.py` for the full graph and
 `test_workflow.py` to run it.
+
+## Discovery, storage, and the dashboard
+
+`scripts/run_pipeline.py` runs `impact_pipeline` unattended, in two modes:
+
+```bash
+python scripts/run_pipeline.py --mode backfill --weeks 8 --cap 20   # historical seed data
+python scripts/run_pipeline.py --mode daily                          # what a scheduler runs
+```
+
+Both modes call `search_jorf_by_date_range()` (`legifrance.py`) — restricted
+to `nature="LOI"` by default, since every other JORF document type
+(décrets, arrêtés, ordonnances) would number in the hundreds over the same
+window. Discovered ids are deduplicated against Firestore
+(`legicivica/storage/firestore_store.py`) using the JORF id itself as the
+document ID — a law is "already processed" iff `laws/{jorf_id}` exists — so
+daily runs can safely re-scan a lookback buffer without reprocessing
+anything. Each new law is run through `impact_pipeline` exactly like
+`test_workflow.py`, then saved as one Firestore document.
+
+`app/streamlit_app.py` is a read-only dashboard over the same `laws`
+collection: a line chart of both scores over time, a table, and a per-law
+detail view (summary, every score component's reasoning, affected
+parties). See [`DEPLOY.md`](DEPLOY.md) for running this on GCP — Cloud Run
+Jobs for the poller, Cloud Scheduler to trigger the daily run, Cloud Run
+Service for the dashboard, all free-tier-eligible.
 
 ## Following along
 

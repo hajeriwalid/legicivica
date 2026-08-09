@@ -226,3 +226,83 @@ def search_code_article(code_name: str, article_num: str) -> dict:
         return {"error": f"Search returned a result with no extractable ID for {article_num}"}
 
     return fetch_code_article(article_id)
+
+
+def search_jorf_by_date_range(start_date: str, end_date: str, nature: str = "LOI", page_size: int = 50) -> list[dict]:
+    """
+    Search the Journal Officiel for texts published in [start_date, end_date],
+    restricted to a given document nature (default "LOI" — actual laws voted
+    by Parliament, not décrets, arrêtés, or ordonnances, which would number
+    in the hundreds over the same window).
+
+    Uses /search with fond=JORF and a filtres/facette structure (NATURE,
+    DATE_PUBLICATION) alongside the champs/typeChamp structure already used
+    by search_code_article — this is how discovery works, as opposed to
+    fetch_law_text, which requires already knowing a specific JORFTEXT id.
+
+    Args:
+        start_date: ISO date string, e.g. "2026-06-01"
+        end_date: ISO date string, e.g. "2026-08-01"
+        nature: document nature filter, e.g. "LOI"
+        page_size: max results per page (Légifrance search is paginated;
+            callers processing a bounded window/cap don't need to paginate
+            beyond one page in practice)
+
+    Returns:
+        A list of dicts, each with {id, title, date, nature} — the JORFTEXT
+        id plus enough metadata to decide whether to process it further.
+        Never raises on an empty result set — returns [] instead.
+
+    Response shape (verified against a live sandbox call — the JORFTEXT id
+    and title are NOT top-level fields, they're nested one level down):
+        {
+          "nature": "LOI",                         # top-level, matches the filter
+          "datePublication": "2026-06-05T00:00:00.000+0000",  # already ISO, not an epoch
+          "titles": [{"cid": "JORFTEXT0...", "title": "LOI n° ..."}],
+        }
+    "cid" is the clean JORFTEXT id — the sibling "id" field carries a
+    version-dated suffix (e.g. "..._01-01-2999") that fetch_law_text's
+    {"textCid": ...} request body does not expect.
+    """
+    response = httpx.post(
+        f"{_BASE_URL}/search",
+        headers=_headers(),
+        json={
+            "fond": "JORF",
+            "recherche": {
+                "champs": [],
+                "filtres": [
+                    {"facette": "NATURE", "valeurs": [nature]},
+                    {"facette": "DATE_PUBLICATION", "dates": {"start": start_date, "end": end_date}},
+                ],
+                "pageNumber": 1,
+                "pageSize": page_size,
+                "operateur": "ET",
+                "sort": "DATE_ASC",
+                "typePagination": "DEFAUT",
+            },
+        },
+    )
+    response.raise_for_status()
+    results = response.json().get("results", [])
+
+    found = []
+    for item in results:
+        item_nature = item.get("nature", "")
+        # Defensive client-side check — never trust an unverified server-side
+        # filter alone, especially given we're deliberately excluding
+        # décrets/arrêtés/ordonnances, which would number in the hundreds.
+        if item_nature and item_nature != nature:
+            continue
+        titles = item.get("titles", [])
+        first_title = titles[0] if titles else {}
+        date_pub = item.get("datePublication", "") or ""
+
+        found.append({
+            "id": first_title.get("cid", ""),
+            "title": first_title.get("title", ""),
+            "date": date_pub[:10] if date_pub else "",
+            "nature": item_nature,
+        })
+
+    return found

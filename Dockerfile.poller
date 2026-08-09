@@ -1,0 +1,24 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY legicivica/ legicivica/
+COPY scripts/ scripts/
+
+# Running `python scripts/run_pipeline.py` puts scripts/ (not /app) at the
+# front of sys.path — Python adds the invoked script's own directory, not
+# the working directory, so `import legicivica` fails without this.
+# Confirmed by reproducing the failure locally. The same fix is needed in
+# Dockerfile.ui too — an earlier assumption that Streamlit's own sys.path
+# bootstrap made it immune was wrong; it wasn't actually verified against
+# a real client session, and the bug reached production before that was
+# caught. See Dockerfile.ui's comment for the full story.
+ENV PYTHONPATH=/app
+
+# Mode/weeks/cap are supplied per Cloud Run Job via --args at deploy time,
+# not baked into the image — the same image backs both the daily and
+# backfill Job resources.
+ENTRYPOINT ["python", "scripts/run_pipeline.py"]
