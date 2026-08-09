@@ -206,7 +206,10 @@ series documents the design decisions and the real bugs found while testing
 against live Légifrance data:
 
 1. [Democratizing the Law with AI Agents](https://www.linkedin.com/pulse/new-laws-dont-make-sense-own-ai-agents-could-fix-walid-hajeri-60bue/) — why this project exists
-2. [LegiCivica - scaffolding a french law AI Agent](https://www.linkedin.com/pulse/legicivica-scaffolding-french-law-ai-agent-walid-hajeri-xycre/) — the v0 agent and project structure
+2. [From Text to a Graph: How LegiCivica Resolves Nested Legal References](https://www.linkedin.com/pulse/from-text-graph-how-legicivica-resolves-nested-legal-walid-hajeri-xyc6e/) — the reference parser and recursive resolver
+3. [LegiCivica - scaffolding a french law AI Agent](https://www.linkedin.com/pulse/legicivica-scaffolding-french-law-ai-agent-walid-hajeri-xycre/) — the v0 agent and project structure
+4. [Beyond Data Retrieval: Teaching an Agent to Reason About New Laws](https://www.linkedin.com/pulse/beyond-data-retrieval-teaching-agent-reason-new-laws-walid-hajeri-mvvse/) — the explainer agent
+5. [Scoring the Rule of Law - Wiring Multiple AI Agents Into a Workflow](https://www.linkedin.com/pulse/scoring-rule-law-wiring-multiple-ai-agents-workflow-walid-hajeri-ovpzf/) — classifier, civic-health agent, and the ADK Workflow orchestrator
 
 ## Data & license
 
