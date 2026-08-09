@@ -22,6 +22,132 @@ DISCLAIMER_FR = """
 - **Limites de l'IA :** Les résumés et résolutions de références sont issus de traitements automatisés et de modèles d'IA. Ils peuvent comporter des inexactitudes et erreurs. Seuls les textes publiés au Journal Officiel font foi.
 """
 
+# Transparency/civic criteria labels are a small fixed set, identical for
+# every law — translated once here rather than per-law via Gemini, unlike
+# the free-text reasons (which are law-specific and live under record["fr"]).
+TRANSPARENCY_LABELS_FR = {
+    "Delegation ratio": "Taux de délégation",
+    "Cross-document complexity": "Complexité inter-documents",
+    "Concreteness of definitions": "Précision des définitions",
+}
+CIVIC_LABELS_FR = {
+    "Legal certainty & prospectivity": "Sécurité juridique et non-rétroactivité",
+    "Proportionality of obligations": "Proportionnalité des obligations",
+    "Sunset & review mechanisms": "Clauses de caducité et de révision",
+    "Subsidiarity / local autonomy": "Subsidiarité / autonomie locale",
+    "Open government & disclosure": "Gouvernement ouvert et transparence",
+}
+CIVIC_NOTICE_FR = (
+    "Il s'agit d'une analyse civique automatisée et circonscrite du texte de la loi, au regard de "
+    "cinq principes liés à l'État de droit. Ceci ne constitue pas un conseil juridique, ne "
+    "détermine pas la validité légale ou constitutionnelle du texte, et n'évalue aucun "
+    "responsable politique."
+)
+
+STRINGS = {
+    "en": {
+        "tagline": (
+            "French Law Transparency Dashboard — every law below is resolved, explained, "
+            "and scored automatically by an AI agent pipeline."
+        ),
+        "source_link": "↗ Source on GitHub",
+        "built_by": f"Built by {AUTHOR}",
+        "methodology_expander": "How the scores are calculated",
+        "transparency_heading": "Transparency score",
+        "transparency_body": """Average of three components, each scored 1–5:
+
+- **Delegation ratio** — how much of what's explained in the law is
+  self-executing today versus waiting on an implementing decree that
+  doesn't exist yet. Fully self-executing scores 5; mostly delegated
+  scores 1.
+- **Cross-document complexity** — how many distinct legal codes the law
+  touches, and how much of the reference chain could actually be
+  resolved. Touching one code with a fully resolved chain scores 5;
+  touching many, or leaving references unresolved, scores lower.
+- **Concreteness of definitions** — an AI judgment of whether the law's
+  key terms are defined concretely or left vague.""",
+        "civic_heading": "Civic index",
+        "civic_body": """Sum of five criteria, each scored -1 (weakens), 0 (neutral / not
+applicable), or +1 (reinforces):
+
+- **Legal certainty & prospectivity**
+- **Proportionality of obligations**
+- **Sunset & review mechanisms**
+- **Subsidiarity / local autonomy**
+- **Open government & disclosure**
+
+This is a normative judgment against open rule-of-law frameworks — not a
+determination of legal or constitutional validity, and not an evaluation
+of any individual official.""",
+        "chart_heading": "Score evolution over time",
+        "chart_caption": "Click a point to highlight that law below.",
+        "trace_transparency": "Transparency score (0-5)",
+        "trace_civic": "Civic index (-5 to +5)",
+        "selected_from_chart": "Selected from chart",
+        "law_detail_heading": "Law detail",
+        "who_affected": "Who's affected:",
+        "effective": "effective",
+        "loading_error": "Could not load data from Firestore: {exc}",
+        "loading_error_hint": "Check GCP_PROJECT_ID and that you're authenticated (gcloud auth application-default login).",
+        "no_laws": "No laws processed yet. The daily poller and historical backfill populate this dashboard.",
+        "footer_link": "LegiCivica on GitHub",
+        "disclaimer_expander": "⚠️ Disclaimer & Legal Notice",
+        "not_yet_translated": "French translation not yet available for this law — showing English.",
+        "range": "range",
+    },
+    "fr": {
+        "tagline": (
+            "Tableau de bord de transparence des lois françaises — chaque loi ci-dessous est "
+            "résolue, expliquée et notée automatiquement par un pipeline d'agents IA."
+        ),
+        "source_link": "↗ Code source sur GitHub",
+        "built_by": f"Créé par {AUTHOR}",
+        "methodology_expander": "Comment les scores sont calculés",
+        "transparency_heading": "Score de transparence",
+        "transparency_body": """Moyenne de trois composantes, chacune notée de 1 à 5 :
+
+- **Taux de délégation** — la part de ce qui est expliqué dans la loi qui
+  s'applique déjà d'elle-même, par rapport à ce qui attend un décret
+  d'application qui n'existe pas encore. Entièrement auto-exécutoire
+  donne 5 ; largement délégué donne 1.
+- **Complexité inter-documents** — le nombre de codes juridiques
+  distincts touchés par la loi, et la part de la chaîne de renvois
+  effectivement résolue. Un seul code avec une chaîne entièrement
+  résolue donne 5 ; en toucher plusieurs, ou laisser des renvois non
+  résolus, donne un score plus bas.
+- **Précision des définitions** — une évaluation par l'IA du caractère
+  concret ou vague des termes clés de la loi.""",
+        "civic_heading": "Indice civique",
+        "civic_body": """Somme de cinq critères, chacun noté -1 (affaiblit), 0 (neutre /
+non applicable), ou +1 (renforce) :
+
+- **Sécurité juridique et non-rétroactivité**
+- **Proportionnalité des obligations**
+- **Clauses de caducité et de révision**
+- **Subsidiarité / autonomie locale**
+- **Gouvernement ouvert et transparence**
+
+Il s'agit d'un jugement normatif au regard de cadres ouverts liés à l'État
+de droit — et non d'une détermination de validité légale ou
+constitutionnelle, ni d'une évaluation d'un responsable politique.""",
+        "chart_heading": "Évolution des scores dans le temps",
+        "chart_caption": "Cliquez sur un point pour mettre en évidence la loi correspondante ci-dessous.",
+        "trace_transparency": "Score de transparence (0-5)",
+        "trace_civic": "Indice civique (-5 à +5)",
+        "selected_from_chart": "Sélectionné depuis le graphique",
+        "law_detail_heading": "Détail des lois",
+        "who_affected": "Qui est concerné :",
+        "effective": "applicable au",
+        "loading_error": "Impossible de charger les données depuis Firestore : {exc}",
+        "loading_error_hint": "Vérifiez GCP_PROJECT_ID et votre authentification (gcloud auth application-default login).",
+        "no_laws": "Aucune loi traitée pour le moment. Le collecteur quotidien alimente ce tableau de bord.",
+        "footer_link": "LegiCivica sur GitHub",
+        "disclaimer_expander": "⚠️ Avertissement légal",
+        "not_yet_translated": "Traduction française pas encore disponible pour cette loi — affichage en anglais.",
+        "range": "plage",
+    },
+}
+
 CUSTOM_CSS = """
 <style>
 :root {
@@ -62,6 +188,25 @@ h1#legicivica-title {
     font-size: 0.85rem;
     opacity: 0.75;
     margin-top: 0.15rem;
+}
+.lc-lang-toggle {
+    margin-top: 0.5rem;
+}
+.lc-lang-toggle a {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    margin-left: 0.3rem;
+    border: 1px solid var(--lc-border);
+    color: var(--lc-accent);
+}
+.lc-lang-toggle a.active {
+    background: var(--lc-accent);
+    color: white;
+    border-color: var(--lc-accent);
 }
 
 .lc-score-badge {
@@ -108,6 +253,13 @@ h1#legicivica-title {
     margin-top: 0;
 }
 
+.lc-untranslated-note {
+    font-size: 0.8rem;
+    font-style: italic;
+    opacity: 0.65;
+    margin-bottom: 0.5rem;
+}
+
 hr.lc-divider {
     border: none;
     border-top: 1px solid var(--lc-border);
@@ -118,6 +270,11 @@ hr.lc-divider {
 }
 </style>
 """
+
+
+def _get_lang() -> str:
+    lang = st.query_params.get("lang", "en")
+    return lang if lang in ("en", "fr") else "en"
 
 
 def records_to_dataframe(records: list[dict]) -> pd.DataFrame:
@@ -150,7 +307,8 @@ def records_to_dataframe(records: list[dict]) -> pd.DataFrame:
     return df
 
 
-def _build_score_chart(df: pd.DataFrame) -> go.Figure:
+def _build_score_chart(df: pd.DataFrame, lang: str) -> go.Figure:
+    t = STRINGS[lang]
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df["publication_date"],
@@ -158,10 +316,10 @@ def _build_score_chart(df: pd.DataFrame) -> go.Figure:
         customdata=df["jorf_id"],
         text=df["title"],
         mode="lines+markers",
-        name="Transparency score (0-5)",
+        name=t["trace_transparency"],
         line=dict(color="#1F3A5F", width=2),
         marker=dict(size=8),
-        hovertemplate="<b>%{text}</b><br>%{x|%-m/%-d/%Y}<br>Transparency: %{y}/5<extra></extra>",
+        hovertemplate="<b>%{text}</b><br>%{x|%-m/%-d/%Y}<br>" + t["trace_transparency"] + ": %{y}/5<extra></extra>",
     ))
     fig.add_trace(go.Scatter(
         x=df["publication_date"],
@@ -169,10 +327,10 @@ def _build_score_chart(df: pd.DataFrame) -> go.Figure:
         customdata=df["jorf_id"],
         text=df["title"],
         mode="lines+markers",
-        name="Civic index (-5 to +5)",
+        name=t["trace_civic"],
         line=dict(color="#B4842A", width=2),
         marker=dict(size=8),
-        hovertemplate="<b>%{text}</b><br>%{x|%-m/%-d/%Y}<br>Civic index: %{y:+d}<extra></extra>",
+        hovertemplate="<b>%{text}</b><br>%{x|%-m/%-d/%Y}<br>" + t["trace_civic"] + ": %{y:+d}<extra></extra>",
     ))
     fig.update_layout(
         clickmode="event+select",
@@ -194,138 +352,148 @@ def _selected_jorf_id(event) -> str | None:
     return points[0].get("customdata")
 
 
-def _render_header() -> None:
+def _render_header(lang: str) -> None:
+    t = STRINGS[lang]
     left, right = st.columns([3, 1])
     with left:
         st.markdown('<h1 id="legicivica-title">LegiCivica</h1>', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="lc-tagline">French Law Transparency Dashboard — '
-            "every law below is resolved, explained, and scored automatically "
-            "by an AI agent pipeline.</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="lc-tagline">{t["tagline"]}</div>', unsafe_allow_html=True)
     with right:
+        en_active = "active" if lang == "en" else ""
+        fr_active = "active" if lang == "fr" else ""
         st.markdown(
             f'<div class="lc-header-links">'
-            f'<a href="{GITHUB_URL}" target="_blank">↗ Source on GitHub</a>'
-            f'<div class="lc-author">Built by {AUTHOR}</div>'
+            f'<a href="{GITHUB_URL}" target="_blank">{t["source_link"]}</a>'
+            f'<div class="lc-author">{t["built_by"]}</div>'
+            f'<div class="lc-lang-toggle">'
+            f'<a href="?lang=en" class="{en_active}">EN</a>'
+            f'<a href="?lang=fr" class="{fr_active}">FR</a>'
+            f'</div>'
             f"</div>",
             unsafe_allow_html=True,
         )
 
 
-def _render_methodology() -> None:
-    with st.expander("How the scores are calculated", expanded=False):
+def _render_methodology(lang: str) -> None:
+    t = STRINGS[lang]
+    with st.expander(t["methodology_expander"], expanded=False):
         col1, col2 = st.columns(2)
         with col1:
             st.markdown(
-                """
+                f"""
 <div class="lc-methodology-card">
-<h4>Transparency score <span class="lc-score-badge">0 – 5</span></h4>
-Average of three components, each scored 1–5:
-
-- **Delegation ratio** — how much of what's explained in the law is
-  self-executing today versus waiting on an implementing decree that
-  doesn't exist yet. Fully self-executing scores 5; mostly delegated
-  scores 1.
-- **Cross-document complexity** — how many distinct legal codes the law
-  touches, and how much of the reference chain could actually be
-  resolved. Touching one code with a fully resolved chain scores 5;
-  touching many, or leaving references unresolved, scores lower.
-- **Concreteness of definitions** — an AI judgment of whether the law's
-  key terms are defined concretely or left vague.
+<h4>{t['transparency_heading']} <span class="lc-score-badge">0 – 5</span></h4>
+{t['transparency_body']}
 </div>
                 """,
                 unsafe_allow_html=True,
             )
         with col2:
             st.markdown(
-                """
+                f"""
 <div class="lc-methodology-card">
-<h4>Civic index <span class="lc-civic-badge">-5 to +5</span></h4>
-Sum of five criteria, each scored -1 (weakens), 0 (neutral / not
-applicable), or +1 (reinforces):
-
-- **Legal certainty & prospectivity**
-- **Proportionality of obligations**
-- **Sunset & review mechanisms**
-- **Subsidiarity / local autonomy**
-- **Open government & disclosure**
-
-This is a normative judgment against open rule-of-law frameworks — not a
-determination of legal or constitutional validity, and not an evaluation
-of any individual official.
+<h4>{t['civic_heading']} <span class="lc-civic-badge">-5 to +5</span></h4>
+{t['civic_body']}
 </div>
                 """,
                 unsafe_allow_html=True,
             )
 
 
-def _render_selected_card(record: dict) -> None:
+def _render_selected_card(record: dict, lang: str) -> None:
+    t = STRINGS[lang]
     transparency = record.get("transparency", {}) or {}
     civic = record.get("civic", {}) or {}
     title = record.get("title", record.get("jorf_id", "Untitled"))
     st.markdown(
         f"""
 <div class="lc-selected-card">
-<div class="lc-selected-label">Selected from chart</div>
+<div class="lc-selected-label">{t['selected_from_chart']}</div>
 <b>{record.get('publication_date', '?')} — {title}</b><br>
-<span class="lc-score-badge">Transparency {transparency.get('overall_score')}/5</span>
+<span class="lc-score-badge">{t['transparency_heading']} {transparency.get('overall_score')}/5</span>
 &nbsp;
-<span class="lc-civic-badge">Civic index {civic.get('civic_index'):+d}</span>
+<span class="lc-civic-badge">{t['civic_heading']} {civic.get('civic_index'):+d}</span>
 </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def _render_law_card(record: dict, expanded: bool, highlighted: bool) -> None:
+def _render_law_card(record: dict, expanded: bool, highlighted: bool, lang: str) -> None:
+    t = STRINGS[lang]
     title = record.get("title", record.get("jorf_id", "Untitled"))
     label = f"{record.get('publication_date', '?')} — {title}"
     if highlighted:
         label = "📍 " + label
+
+    fr = record.get("fr") if lang == "fr" else None
     with st.expander(label, expanded=expanded):
-        st.write(record.get("summary", ""))
+        if lang == "fr" and fr is None:
+            st.markdown(f'<div class="lc-untranslated-note">{t["not_yet_translated"]}</div>', unsafe_allow_html=True)
+
+        summary = fr["summary"] if fr else record.get("summary", "")
+        st.write(summary)
 
         transparency = record.get("transparency", {}) or {}
         st.markdown(
-            f"**Transparency score:** "
+            f"**{t['transparency_heading']}:** "
             f"<span class='lc-score-badge'>{transparency.get('overall_score')}/{transparency.get('overall_max', 5)}</span>",
             unsafe_allow_html=True,
         )
-        for c in transparency.get("components", []):
-            st.markdown(f"- [{c.get('score')}/5] **{c.get('label')}** — {c.get('reason')}")
+        components = transparency.get("components", [])
+        fr_reasons = fr["transparency_reasons"] if fr else None
+        for i, c in enumerate(components):
+            label_text = TRANSPARENCY_LABELS_FR.get(c.get("label"), c.get("label")) if lang == "fr" else c.get("label")
+            reason = fr_reasons[i] if fr_reasons and i < len(fr_reasons) else c.get("reason")
+            st.markdown(f"- [{c.get('score')}/5] **{label_text}** — {reason}")
 
         civic = record.get("civic", {}) or {}
+        index_range = civic.get("civic_index_range", "")
+        if lang == "fr":
+            index_range = index_range.replace(" to ", " à ")
         st.markdown(
-            f"**Civic index:** "
+            f"**{t['civic_heading']}:** "
             f"<span class='lc-civic-badge'>{civic.get('civic_index'):+d}</span> "
-            f"(range {civic.get('civic_index_range')})",
+            f"({t['range']} {index_range})",
             unsafe_allow_html=True,
         )
-        for c in civic.get("criteria", []):
-            st.markdown(f"- [{c.get('score'):+d}] **{c.get('label')}** — {c.get('reason')}")
-        if civic.get("notice"):
-            st.caption(civic["notice"])
+        criteria = civic.get("criteria", [])
+        fr_civic_reasons = fr["civic_reasons"] if fr else None
+        for i, c in enumerate(criteria):
+            label_text = CIVIC_LABELS_FR.get(c.get("label"), c.get("label")) if lang == "fr" else c.get("label")
+            reason = fr_civic_reasons[i] if fr_civic_reasons and i < len(fr_civic_reasons) else c.get("reason")
+            st.markdown(f"- [{c.get('score'):+d}] **{label_text}** — {reason}")
+
+        notice = CIVIC_NOTICE_FR if lang == "fr" else civic.get("notice")
+        if notice:
+            st.caption(notice)
 
         parties = record.get("affected_parties", [])
+        fr_parties = fr["affected_parties"] if fr else None
         if parties:
-            st.markdown("**Who's affected:**")
-            for p in parties:
-                date_part = f" (effective {p.get('effective_date')})" if p.get("effective_date") else ""
-                st.markdown(f"- **{p.get('category')}**: {p.get('obligation')}{date_part}")
+            st.markdown(f"**{t['who_affected']}**")
+            for i, p in enumerate(parties):
+                if fr_parties and i < len(fr_parties):
+                    category = fr_parties[i]["category_fr"]
+                    obligation = fr_parties[i]["obligation_fr"]
+                else:
+                    category = p.get("category")
+                    obligation = p.get("obligation")
+                date_part = f" ({t['effective']} {p.get('effective_date')})" if p.get("effective_date") else ""
+                st.markdown(f"- **{category}**: {obligation}{date_part}")
 
 
-def _render_footer() -> None:
+def _render_footer(lang: str) -> None:
+    t = STRINGS[lang]
     st.markdown('<hr class="lc-divider">', unsafe_allow_html=True)
     st.markdown(
         f'<div class="lc-footer-links">'
-        f'⚖️ <a href="{GITHUB_URL}" target="_blank">LegiCivica on GitHub</a> · '
-        f"built by {AUTHOR}"
+        f'⚖️ <a href="{GITHUB_URL}" target="_blank">{t["footer_link"]}</a> · '
+        f"{t['built_by']}"
         f"</div>",
         unsafe_allow_html=True,
     )
-    with st.expander("⚠️ Disclaimer & Legal Notice / Avertissement légal"):
+    with st.expander(t["disclaimer_expander"]):
         tab_en, tab_fr = st.tabs(["English", "Français"])
         with tab_en:
             st.markdown(DISCLAIMER_EN)
@@ -337,41 +505,44 @@ def render() -> None:
     st.set_page_config(page_title="LegiCivica", page_icon="⚖️", layout="wide")
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-    _render_header()
+    lang = _get_lang()
+    t = STRINGS[lang]
+
+    _render_header(lang)
 
     try:
         records = _load_records()
     except Exception as exc:
-        st.error(f"Could not load data from Firestore: {exc}")
-        st.caption("Check GCP_PROJECT_ID and that you're authenticated (gcloud auth application-default login).")
+        st.error(t["loading_error"].format(exc=exc))
+        st.caption(t["loading_error_hint"])
         return
 
     if not records:
-        st.info("No laws processed yet. The daily poller and historical backfill populate this dashboard.")
-        _render_footer()
+        st.info(t["no_laws"])
+        _render_footer(lang)
         return
 
     df = records_to_dataframe(records)
     by_jorf_id = {r.get("jorf_id"): r for r in records}
 
-    _render_methodology()
+    _render_methodology(lang)
 
-    st.subheader("Score evolution over time")
-    st.caption("Click a point to highlight that law below.")
-    fig = _build_score_chart(df)
+    st.subheader(t["chart_heading"])
+    st.caption(t["chart_caption"])
+    fig = _build_score_chart(df, lang)
     event = st.plotly_chart(fig, key="score_chart", on_select="rerun", selection_mode=["points"])
 
     selected_id = _selected_jorf_id(event)
     if selected_id and selected_id in by_jorf_id:
-        _render_selected_card(by_jorf_id[selected_id])
+        _render_selected_card(by_jorf_id[selected_id], lang)
 
-    st.subheader("Law detail")
+    st.subheader(t["law_detail_heading"])
     for record in sorted(records, key=lambda r: r.get("publication_date", ""), reverse=True):
         jorf_id = record.get("jorf_id")
         highlighted = jorf_id == selected_id
-        _render_law_card(record, expanded=highlighted, highlighted=highlighted)
+        _render_law_card(record, expanded=highlighted, highlighted=highlighted, lang=lang)
 
-    _render_footer()
+    _render_footer(lang)
 
 
 @st.cache_data(ttl=60)

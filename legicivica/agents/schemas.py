@@ -115,6 +115,36 @@ class CivicCriterionScore(BaseModel):
     )
 
 
+class TranslatedReason(BaseModel):
+    """One score component's reason, translated — anchored to its English label
+    so the translation can be matched back to the right component regardless
+    of what order the model returns the list in."""
+
+    label: str = Field(description="The exact same English label given in the input, unchanged — e.g. 'Delegation ratio'. Do not translate this field.")
+    reason_fr: str = Field(description="Natural, fluent French translation of the reason text — not a literal word-for-word translation.")
+
+
+class TranslatedAffectedParty(BaseModel):
+    category_en: str = Field(description="The exact same English category string given in the input, unchanged. Do not translate this field.")
+    category_fr: str = Field(description="French translation of the category.")
+    obligation_fr: str = Field(description="French translation of the obligation text.")
+
+
+class LawTranslationFR(BaseModel):
+    """
+    A pure translation pass over one law's already-generated English content —
+    not a re-analysis. Scores, verdicts, and every other non-text field are
+    computed once in English and reused as-is; only the free-text explanation
+    fields get a French counterpart.
+    """
+
+    law_id: str
+    summary_fr: str = Field(description="French translation of the law's plain-language summary.")
+    transparency_reasons_fr: list[TranslatedReason]
+    civic_reasons_fr: list[TranslatedReason]
+    affected_parties_fr: list[TranslatedAffectedParty]
+
+
 class CivicHealthAssessment(BaseModel):
     """
     A scoped civic/rule-of-law assessment against five criteria that are

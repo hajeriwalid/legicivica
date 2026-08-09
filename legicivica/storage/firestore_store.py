@@ -65,6 +65,26 @@ def list_laws() -> list[dict]:
     return [doc.to_dict() for doc in docs]
 
 
+def list_laws_missing_translation() -> list[dict]:
+    """
+    Return every processed law that has no "fr" field yet — the backfill
+    script's worklist. A plain Python filter over list_laws() rather than a
+    Firestore query, since "field does not exist" isn't something Firestore's
+    query API can express directly and this collection is small.
+    """
+    return [law for law in list_laws() if "fr" not in law]
+
+
+def save_translation(jorf_id: str, fr_data: dict) -> None:
+    """
+    Attach (or replace) a law's French translation sub-document without
+    touching any other field — unlike save_law(), which overwrites the whole
+    document, this is a merge so the backfill script can't accidentally drop
+    the English content it's translating from.
+    """
+    get_db().collection("laws").document(jorf_id).set({"fr": fr_data}, merge=True)
+
+
 def get_poll_state() -> str | None:
     """
     Return the daily poller's watermark (last_checked_date, an ISO date

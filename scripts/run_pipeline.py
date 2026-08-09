@@ -10,6 +10,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from legicivica.agents.orchestrator import impact_pipeline
+from legicivica.agents.translator import translate_law_to_french
 from legicivica.storage.firestore_store import (
     get_poll_state,
     law_exists,
@@ -134,6 +135,10 @@ async def main() -> int:
         try:
             record = await process_one_law(jorf_id)
             record["pipeline_run_mode"] = args.mode
+            try:
+                record["fr"] = await translate_law_to_french(record)
+            except Exception:
+                logger.exception("French translation failed for %s — saving English-only, will retry via backfill", jorf_id)
             save_law(record)
             processed += 1
             logger.info("saved %s — %s", jorf_id, record["title"][:80])
