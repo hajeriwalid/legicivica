@@ -2,16 +2,15 @@
 
 **An open-source experiment in making French law legible to citizens, the day it's published.**
 
-New French laws are rarely self-contained — they're edits to an existing body of
+New French laws are rarely self-contained, they're edits to an existing body of
 legislation ("*le premier alinéa de l'article L. 541-10-3 est ainsi modifié...*"),
 often deferring the substance to ministerial decrees, spanning multiple codes,
 and transposing EU directives without summarizing them. LegiCivica is an
 AI-agent pipeline, built on [Google ADK](https://google.github.io/adk-docs/) and
 the official [Légifrance API](https://piste.gouv.fr/), that tries to close that
-gap: fetch a new law, resolve everything it references, generate automated text summaries and map textual edits — assisting citizens, NGOs, and journalists in navigating legislative changes through an open academic lens. It could also evaluate alignment against normative political science criteria (e.g., Venice Commission rule of law benchmarks, structural transparency metrics).
+gap: fetch a new law, resolve everything it references, generate automated text summaries and map textual edits — assisting citizens, NGOs, and journalists in navigating legislative changes through an open academic lens. It could also evaluate alignment against normative political science criteria (e.g., rule of law benchmarks, structural transparency metrics).
 
-This is a public, in-progress build. The code and its failures are documented
-together, as a [blog series](#following-along), on purpose.
+If you need to understand how it was built, check [blog series](#following-along), on purpose.
 
 ## Status
 
