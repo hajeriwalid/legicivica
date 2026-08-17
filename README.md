@@ -23,7 +23,7 @@ If you need to understand how it was built, check [blog series](#following-along
 | **Orchestrate** | Wire fetch → resolve → explain → classify/civic (parallel) → assemble into one ADK `Workflow` graph | ✅ Built |
 | **Discover** | Search JORF by date range + document nature, dedupe against already-processed laws, run the pipeline unattended | ✅ Built |
 | **Dashboard** | Public read-only UI — table + chart of transparency/civic scores over time | ✅ Built |
-| **Deploy** | Containerize + run on GCP (Cloud Run, Cloud Scheduler, Firestore) | 📝 Runbook written, not yet executed against real infra |
+| **Deploy** | Containerize + run on GCP (Cloud Run, Cloud Scheduler, Firestore) | Running on GCP |
 
 ## Getting started
 
