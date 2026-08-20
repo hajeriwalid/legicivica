@@ -10,7 +10,7 @@ AI-agent pipeline, built on [Google ADK](https://google.github.io/adk-docs/) and
 the official [Légifrance API](https://piste.gouv.fr/), that tries to close that
 gap: fetch a new law, resolve everything it references, generate automated text summaries and map textual edits — assisting citizens, NGOs, and journalists in navigating legislative changes through an open academic lens. It could also evaluate alignment against normative political science criteria (e.g., rule of law benchmarks, structural transparency metrics).
 
-If you need to understand how it was built, check [blog series](#following-along), on purpose.
+If you need to understand how it was built, check [blog series](#following-along)
 
 ## Status
 
