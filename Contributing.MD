@@ -1,33 +1,53 @@
 # Contributing to LégiCivica
 
-First off, thank you for considering contributing to **LégiCivica**! 🎉 
+First off, thank you for taking an interest in **LégiCivica**! 🎉
 
-LégiCivica is an open-source Civic Tech project aimed at making legislative data accessible, clear, and transparent to everyone using agentic AI workflows and Open Data. Community contributions are essential to making this tool more reliable, accessible, and powerful.
+LégiCivica is an open-source Civic Tech project aimed at making legislative data accessible, clear, and transparent to everyone, using agentic AI workflows and Open Data. Feedback from the community is what keeps the project honest, accurate, and useful.
 
-Please take a moment to review this document before submitting your contributions.
+Please take a moment to read this document before getting involved.
 
 ---
 
-## How to Contribute
+## The kinds of contributions we welcome right now
 
-### 1. Reporting Bugs
+This is an early-stage, solo-maintained research project, and it's being built and documented in public on purpose. At this stage the most valuable ways to contribute are **not** code:
+
+### 1. Reporting bugs
 If you encounter a bug or unexpected behavior:
-1. Search the [Issues tab](https://github.com/hajeriwalid/legicivic/issues) to ensure it hasn't already been reported.
-2. If it's a new bug, open a new Issue using the following details:
+1. Search the [Issues tab](https://github.com/hajeriwalid/legicivica/issues) to make sure it hasn't already been reported.
+2. If it's new, open an Issue with:
    - A clear, descriptive title.
-   - Steps to reproduce the bug.
+   - Steps to reproduce.
    - Expected vs. actual behavior.
-   - Screenshots or log outputs if applicable.
+   - Screenshots or log output, if relevant.
 
-### 2. Suggesting Features & Improvements
-We love new ideas! However, to prevent wasted effort on features that might not align with the project's roadmap:
-- **Please open an Issue first** to discuss major feature ideas, agent architecture changes, or UI redesigns before writing code.
-- Explain the motivation behind the suggestion and how it benefits LégiCivica users.
+### 2. Flagging inaccuracies in the output
+LégiCivica summarizes and scores real legislation, and it can get things wrong. If a summary, reference resolution, or score looks incorrect or misleading, please open an Issue with the law's JORF id and what you'd expect instead. This kind of feedback is especially useful.
 
-### 3. Submitting Code (Pull Requests)
-For small bug fixes, typo corrections, or pre-discussed features:
+### 3. Suggesting features & improvements
+We love new ideas. To avoid wasted effort on things that may not fit the project's direction:
+- **Please open an Issue first** to discuss feature ideas, agent-architecture changes, or UI redesigns.
+- Explain the motivation and how it would benefit LégiCivica's users.
 
-1. **Fork the Repository:** Create your own copy of the project.
-2. **Create a Feature Branch:** 
-   ```bash
-   git checkout -b feature/your-feature-name
+### 4. Improving documentation
+Corrections and clarifications to the README, docs, or these guidelines are welcome via the Issues tab.
+
+---
+
+## A note on code contributions
+
+**We are not accepting external code pull requests at this stage.**
+
+This isn't a reflection on anyone's work — it's a deliberate choice while the project is early, evolving quickly, and maintained by a single author who needs to keep its licensing and direction clean and unencumbered. Please don't invest time preparing a code PR; it won't be merged right now, and we'd hate for that effort to go to waste.
+
+If this policy changes, this document will be updated to describe the process (including any contributor agreement) at that time.
+
+In the meantime, **issues, bug reports, accuracy feedback, and ideas are genuinely appreciated** — they're the most helpful thing you can offer today.
+
+---
+
+## Code of conduct
+
+Please be respectful and constructive in all interactions.
+
+Thank you for helping make legislation more legible. 🙏
