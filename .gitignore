@@ -5,4 +5,5 @@ __pycache__/
 .DS_Store
 pipeline-diagram.html
 MAINTENANCE.md
+CLAUDE.md
 video/
