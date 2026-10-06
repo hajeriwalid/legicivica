@@ -56,9 +56,17 @@ cp .env.example .env
 ```
 
 `PISTE_SANDBOX=true` (the default) points at Légifrance's sandbox environment.
-Sandbox data is useful for verifying the plumbing but can serve fixture content
-loosely related to what you actually asked for — don't trust it for real
-answers. Flip it to `false` with production credentials once you have them.
+Sandbox serves the **same real Légifrance data** as production — verified by
+matching returned JORFTEXT ids against legifrance.gouv.fr — so it's fine for
+development and for verifying output. The documented difference is **quota**:
+production allows higher call volumes. Flip to `false` with production
+credentials when call volume warrants it; both the API base URL and the OAuth
+token endpoint switch automatically.
+
+Note that production credentials are a separate PISTE application from your
+sandbox one, and you must accept the Légifrance CGU for the Production
+environment specifically — otherwise the OAuth token succeeds and the API
+calls return 403.
 
 ### Running it
 
@@ -90,8 +98,8 @@ python test_jorf_search.py
 
 # The discovery poller — requires GCP_PROJECT_ID and Firestore access.
 # --mode backfill seeds historical data; --mode daily is what runs on a
-# schedule once deployed. Both need production PISTE credentials
-# (PISTE_SANDBOX=false) to find real, current laws.
+# schedule once deployed. Sandbox credentials return real current laws too;
+# production (PISTE_SANDBOX=false) mainly buys higher API quotas.
 python scripts/run_pipeline.py --mode backfill --weeks 8 --cap 20
 
 # The dashboard — reads whatever run_pipeline.py has written to Firestore
