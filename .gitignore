@@ -1,4 +1,5 @@
 .env
+.env.old
 .venv/
 __pycache__/
 *.pyc
@@ -7,3 +8,4 @@ pipeline-diagram.html
 MAINTENANCE.md
 CLAUDE.md
 video/
+ROADMAP.md
