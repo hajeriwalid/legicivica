@@ -3,6 +3,7 @@ import asyncio
 import logging
 import sys
 from datetime import date, timedelta
+from types import SimpleNamespace
 
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -10,6 +11,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from legicivica.agents.orchestrator import impact_pipeline
+from legicivica.agents.provenance import build_provenance
 from legicivica.agents.translator import translate_law_to_french
 from legicivica.storage.firestore_store import (
     get_poll_state,
@@ -72,9 +74,19 @@ async def process_one_law(jorf_id: str) -> dict:
     message = types.Content(role="user", parts=[types.Part(text=jorf_id)])
 
     final_output = None
+    # Keep only the provenance-relevant fields rather than the events
+    # themselves: an event carries full content, and a long law's text runs to
+    # hundreds of KB, so retaining every event to read three attributes off it
+    # would hold the whole law graph in memory for no reason.
+    event_meta: list[SimpleNamespace] = []
     async for event in runner.run_async(user_id=USER_ID, session_id=session.id, new_message=message):
         if event.output is not None:
             final_output = event.output
+        event_meta.append(SimpleNamespace(
+            author=getattr(event, "author", None),
+            model_version=getattr(event, "model_version", None),
+            usage_metadata=getattr(event, "usage_metadata", None),
+        ))
 
     if final_output is None:
         raise RuntimeError(f"impact_pipeline produced no output for {jorf_id}")
@@ -91,6 +103,12 @@ async def process_one_law(jorf_id: str) -> dict:
 
     transparency = _to_jsonable(final_output["transparency"])
     civic = _to_jsonable(final_output["civic"])
+
+    # Which model actually answered, which prompts were in force, and how
+    # much of the law's reference graph the explanation rests on. The models
+    # stay on floating `-latest` aliases by design (ROADMAP #3a) — this is
+    # what makes that safe rather than opaque.
+    provenance = build_provenance(event_meta, session.state.get("resolver_result"))
 
     # Décret d'application tracking. Deliberately re-fetches the law text
     # rather than reading it out of workflow state: the resolver's `root`
@@ -118,11 +136,13 @@ async def process_one_law(jorf_id: str) -> dict:
         "title": transparency.get("law_title", ""),
         "publication_date": session.state.get("resolver_result", {}).get("root", {}).get("date", ""),
         "summary": explanation_state.get("summary", ""),
+        "analysis": explanation_state.get("analysis", ""),
         "transparency": transparency,
         "civic": civic,
         "affected_parties": transparency.get("affected_parties", []),
         "eu_directives_referenced": transparency.get("eu_directives_referenced", []),
         "implementation": implementation,
+        "provenance": provenance,
     }
 
 

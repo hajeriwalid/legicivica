@@ -23,7 +23,24 @@ def resolve_and_build_prompt(ctx: Context, node_input: str) -> str:
     this one in the chain. Returns the built prompt string, which becomes
     the next node's node_input (explainer_agent's message).
     """
-    resolver_result = resolve_law_references(node_input, max_depth=1, max_articles=15)
+    # max_articles raised 15 -> 40 on 2026-10-06. Measured across 26 laws:
+    # the reference count is sharply bimodal — 20 laws sit at 0-32 references,
+    # then it jumps to 95/111/158/182/287/440. 40 covers the entire normal
+    # cluster (54% -> 77% of laws fully resolved) and sits exactly where the
+    # curve goes flat: raising it to 60 resolves no additional law at all.
+    #
+    # It also removes a bias, not just a limit. At max_depth=1 every reference
+    # is the same depth, so truncating kept whichever articles happened to be
+    # discovered first, not the most relevant ones.
+    #
+    # max_depth stays at 1 deliberately: depth is the dangerous knob, since it
+    # pulls in references-of-references and multiplies hardest on the laws that
+    # are already largest. max_articles is the linear, safe control.
+    #
+    # The half-dozen outliers stay partial at any sane cap (LOI 2026-534 would
+    # need 440). That is fine and now visible: provenance.coverage flags them
+    # low_coverage / not_truncated=false rather than pretending.
+    resolver_result = resolve_law_references(node_input, max_depth=1, max_articles=40)
     ctx.state["resolver_result"] = resolver_result
     return build_explainer_prompt(resolver_result)
 
