@@ -85,6 +85,7 @@ of any individual official.""",
         "trace_civic": "Civic index (-5 to +5)",
         "selected_from_chart": "Selected from chart",
         "law_detail_heading": "Law detail",
+        "analysis_heading": "Analysis",
         "impl_heading": "Implementation status:",
         "impl_implemented": "Implementing text published",
         "impl_blocked": "Not yet in force",
@@ -152,6 +153,7 @@ constitutionnelle, ni d'une évaluation d'un responsable politique.""",
         "trace_civic": "Indice civique (-5 à +5)",
         "selected_from_chart": "Sélectionné depuis le graphique",
         "law_detail_heading": "Détail des lois",
+        "analysis_heading": "Analyse",
         "impl_heading": "État d'application :",
         "impl_implemented": "Texte d'application publié",
         "impl_blocked": "Pas encore en vigueur",
@@ -466,6 +468,13 @@ def _render_law_card(record: dict, expanded: bool, highlighted: bool, lang: str)
 
         summary = fr["summary"] if fr else record.get("summary", "")
         st.write(summary)
+
+        # Long-form analysis. Older records predate this field and simply
+        # don't render it, rather than showing an empty heading.
+        analysis = (fr or {}).get("analysis") or record.get("analysis", "")
+        if analysis:
+            st.markdown(f"**{t['analysis_heading']}**")
+            st.markdown(analysis)
 
         transparency = record.get("transparency", {}) or {}
         st.markdown(

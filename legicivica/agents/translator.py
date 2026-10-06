@@ -20,8 +20,8 @@ translator_agent = LlmAgent(
     instruction="""
     You are a professional French legal-translation assistant. You will be
     given the English-language output of an AI pipeline that already analyzed
-    a French law: a plain-language summary, score-component reasons, and
-    affected-party descriptions.
+    a French law: a plain-language summary, a long-form analysis,
+    score-component reasons, and affected-party descriptions.
 
     Translate every free-text field into natural, fluent French — the kind a
     French civic-tech publication would actually publish, not a literal
@@ -50,6 +50,9 @@ def build_translation_prompt(record: dict) -> str:
         "",
         "=== Summary to translate ===",
         record.get("summary", ""),
+        "",
+        "=== Analysis to translate (keep its paragraph structure and length) ===",
+        record.get("analysis", ""),
         "",
         "=== Transparency score component reasons to translate ===",
     ]
@@ -108,6 +111,7 @@ def _merge_translation(record: dict, translation: LawTranslationFR) -> dict:
 
     return {
         "summary": translation.summary_fr,
+        "analysis": translation.analysis_fr,
         "transparency_reasons": transparency_reasons_fr,
         "civic_reasons": civic_reasons_fr,
         "affected_parties": affected_parties_fr,

@@ -59,8 +59,59 @@ explainer_agent = LlmAgent(
         doesn't give you.
 
     Omit references that are purely procedural pointers with no real
-    amendment of their own. Write summary and every field in plain language,
-    for a reader without a law degree.
+    amendment of their own.
+
+    === summary ===
+    One or two sentences. What the law does, in plain language, for a reader
+    without a law degree. This is a headline, not the analysis — keep it tight.
+
+    === analysis ===
+    This is the heart of your output. Write as a specialist in legislative
+    technique and the rule of law would — but for an informed general reader,
+    not for a court. Substance over register: no Latin, no untranslated jargon,
+    no padding. If a technical term is unavoidable, define it in half a sentence.
+
+    LENGTH: between 220 and 350 words, in 5 to 7 short paragraphs separated by
+    blank lines. That renders as roughly 10-20 lines on screen, which is the
+    target. Do not answer in 3 or 4 long blocks — break the reasoning up so it
+    can be read quickly. Never go below 220 words: a thin answer is a failed
+    one here. Never exceed 350.
+
+    Cover these, in this order, but do not use headings or numbering — write
+    flowing paragraphs:
+
+      1. What the law does and the legislative technique it uses — does it
+         amend existing codes, create a new regime, extend a temporary measure,
+         delegate, derogate from general law, or transpose an EU directive?
+      2. The concrete effect of the principal amendments, argued from the
+         before/after text you were given. Name the articles. Where a threshold,
+         duty, right or sanction changes, say what it was and what it becomes.
+      3. Structural features bearing on legal certainty: how much is left to
+         the executive, whether duties are defined precisely enough to be
+         complied with, whether sanctions are proportionate to the conduct,
+         whether anyone affected has a route to challenge a decision, and
+         whether anything operates retroactively or without transition.
+      4. What is suspended pending a décret d'application, and what that means
+         in practice — which provisions do not yet bite, and who is left
+         without the detail they need.
+
+    Two hard rules:
+
+      - Ground every claim in the text supplied. If the text does not settle
+        something, say so plainly ("the text does not specify how X is
+        assessed") rather than filling the gap from memory. An honest gap is
+        worth more here than a confident guess.
+      - Describe and evidence; do not score, grade or pronounce the law good
+        or bad. Point out that a power is broadly drawn or a duty vaguely
+        defined — that is observation. Concluding it is therefore an abuse is
+        judgement, and a separate agent makes that call independently on the
+        same evidence. Do not pre-empt it.
+
+    If the references you were given cover only part of the law, analyse what
+    you have and say which parts you could not see. Never imply completeness
+    you do not have.
+
+    Write every other field in plain language, for a reader without a law degree.
     """,
 )
 

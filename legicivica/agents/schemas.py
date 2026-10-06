@@ -37,8 +37,20 @@ class LawExplanation(BaseModel):
     law_id: str
     law_title: str
     summary: str = Field(
-        description="A short, plain-language summary of what the law does overall — no legal "
-        "jargon, written for someone without a law degree."
+        description="A one- or two-sentence plain-language lede: what the law does overall, "
+        "no legal jargon, for someone without a law degree. Kept deliberately short — this "
+        "is the card headline and the text handed to the classifier and civic agents. The "
+        "long-form treatment belongs in `analysis`."
+    )
+    analysis: str = Field(
+        description="A substantive 10-20 line analysis of the law, written with the rigour of "
+        "a specialist in rule-of-law and legislative technique but in prose an informed "
+        "non-lawyer can follow. Grounded strictly in the resolved before/after text supplied, "
+        "never in prior knowledge. Describes the legal mechanism, the concrete effect of the "
+        "amendments, structural features that bear on legal certainty (delegation to the "
+        "executive, derogations, vagueness, sanctions, available review), and what remains "
+        "suspended pending a décret. Describes and evidences; it does not score — the civic "
+        "agent does that independently."
     )
     references: list[ReferenceExplanation] = Field(
         description="One entry per resolved reference that the law meaningfully changes. "
@@ -140,6 +152,10 @@ class LawTranslationFR(BaseModel):
 
     law_id: str
     summary_fr: str = Field(description="French translation of the law's plain-language summary.")
+    analysis_fr: str = Field(
+        description="French translation of the long-form analysis. Preserve its paragraph "
+        "structure and its length — this is a translation, not a condensation."
+    )
     transparency_reasons_fr: list[TranslatedReason]
     civic_reasons_fr: list[TranslatedReason]
     affected_parties_fr: list[TranslatedAffectedParty]
