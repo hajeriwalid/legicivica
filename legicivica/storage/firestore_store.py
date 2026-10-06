@@ -102,3 +102,15 @@ def set_poll_state(last_checked_date: str) -> None:
     get_db().collection("meta").document("poll_state").set(
         {"last_checked_date": last_checked_date}
     )
+
+
+def save_implementation(jorf_id: str, implementation: dict) -> None:
+    """
+    Merge décret d'application tracking onto an existing law document.
+
+    Uses merge=True (like save_translation) so a reconciliation pass never
+    clobbers the law's analysis — it only writes the `implementation` field.
+    """
+    get_db().collection("laws").document(jorf_id).set(
+        {"implementation": implementation}, merge=True
+    )

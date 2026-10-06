@@ -85,6 +85,22 @@ of any individual official.""",
         "trace_civic": "Civic index (-5 to +5)",
         "selected_from_chart": "Selected from chart",
         "law_detail_heading": "Law detail",
+        "impl_heading": "Implementation status:",
+        "impl_implemented": "Implementing text published",
+        "impl_blocked": "Not yet in force",
+        "impl_unknown": "Awaiting implementing text",
+        "impl_not_required": "No implementing text needed",
+        "impl_defers": "This law defers {n} point(s) to a future décret or arrêté.",
+        "impl_blocked_note": (
+            "This law defers its own entry into force to a future décret. "
+            "Until that décret is published, the affected provisions do not apply."
+        ),
+        "impl_found": "Implementing texts found:",
+        "impl_caveat": (
+            "Implementing texts are detected by matching décret and arrêté *titles* that cite "
+            "this law's number. A text citing the law only in its body is not detected, so "
+            "\"awaiting\" means none was found — not that none exists."
+        ),
         "who_affected": "Who's affected:",
         "effective": "effective",
         "loading_error": "Could not load data from Firestore: {exc}",
@@ -136,6 +152,23 @@ constitutionnelle, ni d'une évaluation d'un responsable politique.""",
         "trace_civic": "Indice civique (-5 à +5)",
         "selected_from_chart": "Sélectionné depuis le graphique",
         "law_detail_heading": "Détail des lois",
+        "impl_heading": "État d'application :",
+        "impl_implemented": "Texte d'application publié",
+        "impl_blocked": "Pas encore en vigueur",
+        "impl_unknown": "En attente de texte d'application",
+        "impl_not_required": "Aucun texte d'application requis",
+        "impl_defers": "Cette loi renvoie {n} point(s) à un futur décret ou arrêté.",
+        "impl_blocked_note": (
+            "Cette loi renvoie son entrée en vigueur à un décret à venir. "
+            "Tant que ce décret n'est pas publié, les dispositions concernées ne s'appliquent pas."
+        ),
+        "impl_found": "Textes d'application trouvés :",
+        "impl_caveat": (
+            "Les textes d'application sont détectés en recherchant les *titres* de décrets et "
+            "arrêtés citant le numéro de cette loi. Un texte citant la loi uniquement dans son "
+            "corps n'est pas détecté : « en attente » signifie qu'aucun n'a été trouvé, non "
+            "qu'aucun n'existe."
+        ),
         "who_affected": "Qui est concerné :",
         "effective": "applicable au",
         "loading_error": "Impossible de charger les données depuis Firestore : {exc}",
@@ -481,6 +514,51 @@ def _render_law_card(record: dict, expanded: bool, highlighted: bool, lang: str)
                     obligation = p.get("obligation")
                 date_part = f" ({t['effective']} {p.get('effective_date')})" if p.get("effective_date") else ""
                 st.markdown(f"- **{category}**: {obligation}{date_part}")
+
+        _render_implementation(record, lang)
+
+
+def _render_implementation(record: dict, lang: str) -> None:
+    """
+    Show whether the law's deferred provisions ever got their décret.
+
+    Deliberately phrased as "awaiting" rather than "unimplemented": title
+    matching cannot see a décret that cites the law only in its body, so a
+    null result is ignorance, not absence. See decree_tracker.py.
+    """
+    t = STRINGS[lang]
+    impl = record.get("implementation") or {}
+    status = impl.get("status")
+    if not status:
+        return
+
+    badge = {
+        "implemented": ("✅", t["impl_implemented"]),
+        "blocked": ("⛔", t["impl_blocked"]),
+        "unknown": ("🕓", t["impl_unknown"]),
+        "not_required": ("—", t["impl_not_required"]),
+    }.get(status)
+    if not badge:
+        return
+    icon, text = badge
+
+    st.markdown(f"**{t['impl_heading']}** {icon} {text}")
+
+    deferral_count = impl.get("deferral_count", impl.get("total", 0)) or 0
+    if deferral_count:
+        st.markdown(t["impl_defers"].format(n=deferral_count))
+
+    if status == "blocked":
+        st.warning(t["impl_blocked_note"])
+
+    texts = impl.get("implementing_texts") or []
+    if texts:
+        st.markdown(f"**{t['impl_found']}**")
+        for text in texts:
+            st.markdown(f"- {text.get('date', '?')} — {text.get('title', '')}")
+
+    if status in ("blocked", "unknown"):
+        st.caption(t["impl_caveat"])
 
 
 def _render_footer(lang: str) -> None:

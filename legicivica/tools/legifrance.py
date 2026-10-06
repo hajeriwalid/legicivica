@@ -306,3 +306,94 @@ def search_jorf_by_date_range(start_date: str, end_date: str, nature: str = "LOI
         })
 
     return found
+
+
+def search_jorf_texts(
+    start_date: str,
+    end_date: str,
+    nature: str = "DECRET",
+    page_size: int = 100,
+    max_pages: int = 30,
+) -> list[dict]:
+    """
+    Enumerate every JORF text of a given nature in a date window, paginating.
+
+    Differs from search_jorf_by_date_range in two ways: it pages through the
+    whole result set rather than taking the first page, and it defaults to
+    DECRET. It exists for décret d'application tracking (decree_tracker.py),
+    where the point is precisely to sweep the document types the discovery
+    poller deliberately skips.
+
+    Why enumerate rather than query by law number: the Légifrance /search
+    full-text field (typeChamp "TEXTE") does not work — verified 2026-09-03
+    against production, where searching "titres-restaurant" returned horse
+    racing results from 2008 and "aide à mourir" returned 2022 décrets on
+    officiers ministériels. The text criterion is silently ignored and
+    arbitrary rows come back. Only the NATURE and DATE_PUBLICATION *facet
+    filters* are honoured, so date+nature enumeration plus local matching is
+    the only reliable path. Don't "optimise" this back into a text query
+    without re-verifying that behaviour.
+
+    Args:
+        start_date / end_date: ISO date strings.
+        nature: "DECRET", "ARRETE", "ORDONNANCE", ...
+        page_size: server caps this at 100.
+        max_pages: safety bound. At ~100-250 décrets/month a multi-year
+            sweep will hit this — raise it deliberately rather than by
+            accident, since each page is an API call (and, until
+            _get_token() is cached, two).
+
+    Returns:
+        List of {id, title, date, nature}, oldest first. Stops early on the
+        first short page. Never raises on an empty result set.
+    """
+    collected: list[dict] = []
+    seen_ids: set[str] = set()
+
+    for page in range(1, max_pages + 1):
+        response = httpx.post(
+            f"{_BASE_URL}/search",
+            headers=_headers(),
+            json={
+                "fond": "JORF",
+                "recherche": {
+                    "champs": [],
+                    "filtres": [
+                        {"facette": "NATURE", "valeurs": [nature]},
+                        {"facette": "DATE_PUBLICATION", "dates": {"start": start_date, "end": end_date}},
+                    ],
+                    "pageNumber": page,
+                    "pageSize": page_size,
+                    "operateur": "ET",
+                    "sort": "DATE_ASC",
+                    "typePagination": "DEFAUT",
+                },
+            },
+        )
+        response.raise_for_status()
+        results = response.json().get("results", [])
+        if not results:
+            break
+
+        for item in results:
+            item_nature = item.get("nature", "")
+            if item_nature and item_nature != nature:
+                continue
+            titles = item.get("titles", [])
+            first_title = titles[0] if titles else {}
+            text_id = first_title.get("cid", "")
+            if not text_id or text_id in seen_ids:
+                continue
+            seen_ids.add(text_id)
+            date_pub = item.get("datePublication", "") or ""
+            collected.append({
+                "id": text_id,
+                "title": first_title.get("title", ""),
+                "date": date_pub[:10] if date_pub else "",
+                "nature": item_nature,
+            })
+
+        if len(results) < page_size:
+            break
+
+    return collected
